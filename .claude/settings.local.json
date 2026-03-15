@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"print\\(''hello''\\)\")",
+      "Bash(python notebooks/make_nb.py)",
+      "Bash(python -c \":*)"
+    ]
+  }
+}

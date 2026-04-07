@@ -3,7 +3,8 @@
     "allow": [
       "Bash(python -c \"print\\(''hello''\\)\")",
       "Bash(python notebooks/make_nb.py)",
-      "Bash(python -c \":*)"
+      "Bash(python -c \":*)",
+      "Bash(python -c \"import json; nb=json.load\\(open\\(''notebooks/main.ipynb''\\)\\); cell8=[c for c in nb[''cells''] if c.get\\(''id''\\)==''cell-8''][0]; outputs=cell8.get\\(''outputs'',[]\\); [print\\(o.get\\(''text'',''''\\) or o.get\\(''traceback'',''''\\)\\) for o in outputs]\")"
     ]
   }
 }

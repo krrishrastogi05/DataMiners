@@ -595,16 +595,30 @@ def build_search(pipeline, param_grids, search_type, n_iter, inner_cv, rs, n_job
 
 
 def stratified_subsample(X, y, max_samples, random_state):
-    """Stratified subsample of (X, y) down to max_samples rows."""
+    """Subsample majority class to max_samples, keeping all minority samples untouched."""
     rng    = np.random.RandomState(random_state)
     idx_0  = np.where(y == 0)[0]
     idx_1  = np.where(y == 1)[0]
-    ratio  = len(idx_1) / len(y)
-    n1     = max(1, int(max_samples * ratio))
-    n0     = max_samples - n1
-    sel_0  = rng.choice(idx_0, size=min(n0, len(idx_0)), replace=False)
-    sel_1  = rng.choice(idx_1, size=min(n1, len(idx_1)), replace=False)
-    idx    = rng.permutation(np.concatenate([sel_0, sel_1]))
+    
+    if len(y) <= max_samples:
+        return X, y
+        
+    idx_maj, idx_min = (idx_0, idx_1) if len(idx_0) > len(idx_1) else (idx_1, idx_0)
+    
+    n_min = len(idx_min)
+    if n_min >= max_samples:
+        # Fallback if minority is larger than max_samples
+        ratio = n_min / len(y)
+        n_min_sel = int(max_samples * ratio)
+        n_maj_sel = max_samples - n_min_sel
+        sel_min = rng.choice(idx_min, size=n_min_sel, replace=False)
+        sel_maj = rng.choice(idx_maj, size=n_maj_sel, replace=False)
+    else:
+        sel_min = idx_min
+        n_maj_sel = max_samples - n_min
+        sel_maj = rng.choice(idx_maj, size=min(len(idx_maj), n_maj_sel), replace=False)
+        
+    idx = rng.permutation(np.concatenate([sel_min, sel_maj]))
     return X[idx], y[idx]
 
 

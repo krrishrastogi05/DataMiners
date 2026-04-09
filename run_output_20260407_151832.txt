@@ -1,0 +1,294 @@
+Configuration ready.
+  Runtime: Local/Jupyter
+  PROJECT_ROOT: C:\Users\BIT\Documents\Super_Coding\Projects\DataMiners
+  DATA_DIR: C:\Users\BIT\Documents\Super_Coding\Projects\DataMiners\data
+  TRAIN_DIR: C:\Users\BIT\Documents\Super_Coding\Projects\DataMiners\data\Sample_Training
+  TEST_DIR: C:\Users\BIT\Documents\Super_Coding\Projects\DataMiners\data\Sample_Test
+  FEATURE_COLS: ['AccX', 'AccY', 'AccZ', 'GyrX', 'GyrY', 'GyrZ', 'EulerX', 'EulerY', 'EulerZ']
+  LABEL_COL: FallCheck
+  WINDOW_SIZE: 50
+  STEP_SIZE: 25
+  FALL_THRESHOLD: 0.4
+  N_FOLDS: 3
+  RANDOM_STATE: 42
+  N_JOBS: -1
+  OUTPUT_DIR: C:\Users\BIT\Documents\Super_Coding\Projects\DataMiners\data\Balanced
+Loading training data ...
+  25 subjects | 2473 files | 1,233,209 rows
+Loading test data ...
+  6 subjects | 586 files | 287,813 rows
+Applying sliding window to training data ...
+  Windows: 49,290  Class 0: 43,160  Class 1: 6,130  Ratio: 7.0:1
+Applying sliding window to test data ...
+  Windows: 11,505  Class 0: 10,037  Class 1: 1,468  Ratio: 6.8:1
+
+Window shapes — train: (49290, 50, 9)  test: (11505, 50, 9)
+Expected windows from a 729-row file: 28
+Extracting features from training windows ...
+  X_train: (49290, 135)
+Extracting features from test windows ...
+  X_test : (11505, 135)
+
+135 features = 9 channels x 15 statistics
+Evaluation unit test passed: TP=1, TN=1, FP=1, FN=1
+ TP  TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+  1   1   1   1         0.5         0.5       0.5                0.5       0.5
+Original class distribution:
+[TRAIN] Total: 49,290  Class 0: 43,160 (87.6%)  Class 1: 6,130 (12.4%)  Ratio: 7.0:1
+[TEST] Total: 11,505  Class 0: 10,037 (87.2%)  Class 1: 1,468 (12.8%)  Ratio: 6.8:1
+
+Creating Data-Balanced (Undersampled) Variant:
+[Data-Balanced Train] Total: 12,260  Class 0: 6,130 (50.0%)  Class 1: 6,130 (50.0%)  Ratio: 1.0:1
+
+Saving datasets ...
+  Saved 49,290 rows  →  C:\Users\BIT\Documents\Super_Coding\Projects\DataMiners\data\Balanced\full_training_set.csv
+  Saved 12,260 rows  →  C:\Users\BIT\Documents\Super_Coding\Projects\DataMiners\data\Balanced\undersampled_training_set.csv
+  Saved 11,505 rows  →  C:\Users\BIT\Documents\Super_Coding\Projects\DataMiners\data\Balanced\full_test_set.csv
+
+XGBoost scale_pos_weight (full dataset): 7.04
+Classifiers configured:
+  [RandomForest]  search=random  class_weight_support=True
+  [SVM]  search=random  class_weight_support=True
+  [LogisticRegression]  search=random  class_weight_support=True
+  [XGBoost]  search=random  class_weight_support=False
+Training all models on explicit dataset variants ...
+
+  [RandomForest] dataset=imbalanced_baseline ... done | bal_acc=0.9346  F1_macro=0.9433  TP=1292  FN=176
+  [RandomForest] dataset=class_weighted ... done | bal_acc=0.9486  F1_macro=0.8995  TP=1390  FN=78
+  [RandomForest] dataset=data_balanced ... done | bal_acc=0.9546  F1_macro=0.8822  TP=1434  FN=34
+  [SVM] dataset=imbalanced_baseline ... (subsampled 49,290→15,000) done | bal_acc=0.9555  F1_macro=0.9227  TP=1388  FN=80
+  [SVM] dataset=class_weighted ... (subsampled 49,290→15,000) done | bal_acc=0.9586  F1_macro=0.9131  TP=1410  FN=58
+  [SVM] dataset=data_balanced ... done | bal_acc=0.9573  F1_macro=0.9074  TP=1412  FN=56
+  [LogisticRegression] dataset=imbalanced_baseline ... done | bal_acc=0.8886  F1_macro=0.9020  TP=1168  FN=300
+  [LogisticRegression] dataset=class_weighted ... done | bal_acc=0.9344  F1_macro=0.8770  TP=1366  FN=102
+  [LogisticRegression] dataset=data_balanced ... done | bal_acc=0.9367  F1_macro=0.8761  TP=1376  FN=92
+  [XGBoost] dataset=imbalanced_baseline ... done | bal_acc=0.9455  F1_macro=0.9533  TP=1321  FN=147
+  [XGBoost] dataset=class_weighted ... done | bal_acc=0.9597  F1_macro=0.9255  TP=1400  FN=68
+  [XGBoost] dataset=data_balanced ... done | bal_acc=0.9583  F1_macro=0.9095  TP=1413  FN=55
+
+All models trained.
+========================================================================
+  Model: RandomForest
+========================================================================
+
+--- PURE IMBALANCED BASELINE (NO WEIGHTS) ---
+Best Hyperparameters: {'n_estimators': 100, 'min_samples_split': 5, 'min_samples_leaf': 1, 'max_features': 'sqrt', 'max_depth': 20}
+
+Confusion Matrix (test set):
+                    Predicted 0 (No-Fall)  Predicted 1 (Fall)
+RandomForest                                                 
+Actual 0 (No-Fall)                   9928                 109
+Actual 1 (Fall)                       176                1292
+
+Metrics (test set):
+  TP   TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+1292 9928 109 176      0.9858      0.9007    0.9433             0.9346    0.9752
+Metrics (3-fold CV on training set):
+  TP    TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+5392 42790 370 738      0.9872      0.9068     0.947             0.9355    0.9775
+
+--- FULL DATA (CLASS WEIGHTED / ALGORITHM BALANCED) ---
+Best Hyperparameters: {'n_estimators': 200, 'min_samples_split': 2, 'min_samples_leaf': 4, 'max_features': 'sqrt', 'max_depth': 10}
+
+Confusion Matrix (test set):
+                    Predicted 0 (No-Fall)  Predicted 1 (Fall)
+RandomForest                                                 
+Actual 0 (No-Fall)                   9539                 498
+Actual 1 (Fall)                        78                1390
+
+Metrics (test set):
+  TP   TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+1390 9539 498  78      0.9707      0.8284    0.8995             0.9486    0.9499
+Metrics (3-fold CV on training set):
+  TP    TN   FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+5802 41566 1594 328      0.9774      0.8579    0.9177             0.9548     0.961
+
+--- DATA BALANCED (RANDOM UNDERSAMPLING MAJORITY) ---
+Best Hyperparameters: {'n_estimators': 100, 'min_samples_split': 5, 'min_samples_leaf': 1, 'max_features': 'sqrt', 'max_depth': 20}
+
+Confusion Matrix (test set):
+                    Predicted 0 (No-Fall)  Predicted 1 (Fall)
+RandomForest                                                 
+Actual 0 (No-Fall)                   9359                 678
+Actual 1 (Fall)                        34                1434
+
+Metrics (test set):
+  TP   TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+1434 9359 678  34      0.9634      0.8011    0.8822             0.9546    0.9381
+Metrics (3-fold CV on training set):
+  TP   TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+5982 5770 360 148      0.9578      0.9593    0.9586             0.9586    0.9586
+
+========================================================================
+  Model: SVM
+========================================================================
+
+--- PURE IMBALANCED BASELINE (NO WEIGHTS) ---
+Best Hyperparameters: {'kernel': 'rbf', 'gamma': 'auto', 'C': 10}
+
+Confusion Matrix (test set):
+                    Predicted 0 (No-Fall)  Predicted 1 (Fall)
+SVM                                                          
+Actual 0 (No-Fall)                   9691                 346
+Actual 1 (Fall)                        80                1388
+
+Metrics (test set):
+  TP   TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+1388 9691 346  80      0.9785       0.867    0.9227             0.9555     0.963
+Metrics (3-fold CV on training set):
+  TP   TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+5896 8577 293 234      0.9702      0.9572    0.9637             0.9644    0.9649
+
+--- FULL DATA (CLASS WEIGHTED / ALGORITHM BALANCED) ---
+Best Hyperparameters: {'kernel': 'rbf', 'gamma': 'auto', 'C': 10}
+
+Confusion Matrix (test set):
+                    Predicted 0 (No-Fall)  Predicted 1 (Fall)
+SVM                                                          
+Actual 0 (No-Fall)                   9602                 435
+Actual 1 (Fall)                        58                1410
+
+Metrics (test set):
+  TP   TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+1410 9602 435  58       0.975      0.8512    0.9131             0.9586    0.9571
+Metrics (3-fold CV on training set):
+  TP   TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+5930 8539 331 200      0.9698      0.9571    0.9635              0.965    0.9646
+
+--- DATA BALANCED (RANDOM UNDERSAMPLING MAJORITY) ---
+Best Hyperparameters: {'kernel': 'rbf', 'gamma': 'auto', 'C': 10}
+
+Confusion Matrix (test set):
+                    Predicted 0 (No-Fall)  Predicted 1 (Fall)
+SVM                                                          
+Actual 0 (No-Fall)                   9562                 475
+Actual 1 (Fall)                        56                1412
+
+Metrics (test set):
+  TP   TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+1412 9562 475  56       0.973      0.8417    0.9074             0.9573    0.9538
+Metrics (3-fold CV on training set):
+  TP   TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+5935 5868 262 195      0.9625      0.9629    0.9627             0.9627    0.9627
+
+========================================================================
+  Model: LogisticRegression
+========================================================================
+
+--- PURE IMBALANCED BASELINE (NO WEIGHTS) ---
+Best Hyperparameters: {'solver': 'liblinear', 'penalty': 'l2', 'C': 100}
+
+Confusion Matrix (test set):
+                    Predicted 0 (No-Fall)  Predicted 1 (Fall)
+LogisticRegression                                           
+Actual 0 (No-Fall)                   9852                 185
+Actual 1 (Fall)                       300                1168
+
+Metrics (test set):
+  TP   TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+1168 9852 185 300       0.976      0.8281     0.902             0.8886    0.9578
+Metrics (3-fold CV on training set):
+  TP    TN  FP   FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+4980 42553 607 1150      0.9798        0.85    0.9149             0.8992    0.9644
+
+--- FULL DATA (CLASS WEIGHTED / ALGORITHM BALANCED) ---
+Best Hyperparameters: {'solver': 'liblinear', 'penalty': 'l2', 'C': 100}
+
+Confusion Matrix (test set):
+                    Predicted 0 (No-Fall)  Predicted 1 (Fall)
+LogisticRegression                                           
+Actual 0 (No-Fall)                   9417                 620
+Actual 1 (Fall)                       102                1366
+
+Metrics (test set):
+  TP   TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+1366 9417 620 102      0.9631       0.791     0.877             0.9344    0.9372
+Metrics (3-fold CV on training set):
+  TP    TN   FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+5735 40949 2211 395      0.9692      0.8149     0.892             0.9422    0.9471
+
+--- DATA BALANCED (RANDOM UNDERSAMPLING MAJORITY) ---
+Best Hyperparameters: {'solver': 'liblinear', 'penalty': 'l2', 'C': 100}
+
+Confusion Matrix (test set):
+                    Predicted 0 (No-Fall)  Predicted 1 (Fall)
+LogisticRegression                                           
+Actual 0 (No-Fall)                   9396                 641
+Actual 1 (Fall)                        92                1376
+
+Metrics (test set):
+  TP   TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+1376 9396 641  92      0.9625      0.7897    0.8761             0.9367    0.9363
+Metrics (3-fold CV on training set):
+  TP   TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+5748 5807 323 382      0.9428      0.9422    0.9425             0.9425    0.9425
+
+========================================================================
+  Model: XGBoost
+========================================================================
+
+--- PURE IMBALANCED BASELINE (NO WEIGHTS) ---
+Best Hyperparameters: {'subsample': 0.8, 'n_estimators': 200, 'min_child_weight': 3, 'max_depth': 7, 'learning_rate': 0.1, 'colsample_bytree': 0.7}
+
+Confusion Matrix (test set):
+                    Predicted 0 (No-Fall)  Predicted 1 (Fall)
+XGBoost                                                      
+Actual 0 (No-Fall)                   9949                  88
+Actual 1 (Fall)                       147                1321
+
+Metrics (test set):
+  TP   TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+1321 9949  88 147      0.9883      0.9183    0.9533             0.9455    0.9796
+Metrics (3-fold CV on training set):
+  TP    TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+5518 42804 356 612      0.9888      0.9194    0.9541              0.946    0.9804
+
+--- FULL DATA (CLASS WEIGHTED / ALGORITHM BALANCED) ---
+Best Hyperparameters: {'subsample': 0.8, 'n_estimators': 100, 'min_child_weight': 3, 'max_depth': 5, 'learning_rate': 0.1, 'colsample_bytree': 0.7}
+
+Confusion Matrix (test set):
+                    Predicted 0 (No-Fall)  Predicted 1 (Fall)
+XGBoost                                                      
+Actual 0 (No-Fall)                   9693                 344
+Actual 1 (Fall)                        68                1400
+
+Metrics (test set):
+  TP   TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+1400 9693 344  68      0.9792      0.8717    0.9255             0.9597    0.9642
+Metrics (3-fold CV on training set):
+  TP    TN   FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+5861 41963 1197 269      0.9828      0.8888    0.9358             0.9642    0.9703
+
+--- DATA BALANCED (RANDOM UNDERSAMPLING MAJORITY) ---
+Best Hyperparameters: {'subsample': 1.0, 'n_estimators': 200, 'min_child_weight': 1, 'max_depth': 7, 'learning_rate': 0.2, 'colsample_bytree': 0.8}
+
+Confusion Matrix (test set):
+                    Predicted 0 (No-Fall)  Predicted 1 (Fall)
+XGBoost                                                      
+Actual 0 (No-Fall)                   9575                 462
+Actual 1 (Fall)                        55                1413
+
+Metrics (test set):
+  TP   TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+1413 9575 462  55      0.9737      0.8453    0.9095             0.9583    0.9551
+Metrics (3-fold CV on training set):
+  TP   TN  FP  FN  f1_class_0  f1_class_1  f1_macro  balanced_accuracy  accuracy
+5974 5889 241 156      0.9674      0.9678    0.9676             0.9676    0.9676
+
+
+========================================================================
+  COMPARATIVE SUMMARY — TEST SET (All Models × All Dataset Variants)
+========================================================================
+             Model                                         Dataset   TP   TN  FP  FN  F1 (class 0)  F1 (class 1)  F1 Macro  Balanced Accuracy  Accuracy
+      RandomForest           Pure Imbalanced Baseline (No Weights) 1292 9928 109 176        0.9858        0.9007    0.9433             0.9346    0.9752
+      RandomForest Full Data (Class Weighted / Algorithm Balanced) 1390 9539 498  78        0.9707        0.8284    0.8995             0.9486    0.9499
+      RandomForest   Data Balanced (Random Undersampling Majority) 1434 9359 678  34        0.9634        0.8011    0.8822             0.9546    0.9381
+               SVM           Pure Imbalanced Baseline (No Weights) 1388 9691 346  80        0.9785        0.8670    0.9227             0.9555    0.9630
+               SVM Full Data (Class Weighted / Algorithm Balanced) 1410 9602 435  58        0.9750        0.8512    0.9131             0.9586    0.9571
+               SVM   Data Balanced (Random Undersampling Majority) 1412 9562 475  56        0.9730        0.8417    0.9074             0.9573    0.9538
+LogisticRegression           Pure Imbalanced Baseline (No Weights) 1168 9852 185 300        0.9760        0.8281    0.9020             0.8886    0.9578
+LogisticRegression Full Data (Class Weighted / Algorithm Balanced) 1366 9417 620 102        0.9631        0.7910    0.8770             0.9344    0.9372
+LogisticRegression   Data Balanced (Random Undersampling Majority) 1376 9396 641  92        0.9625        0.7897    0.8761             0.9367    0.9363
+           XGBoost           Pure Imbalanced Baseline (No Weights) 1321 9949  88 147        0.9883        0.9183    0.9533             0.9455    0.9796
+           XGBoost Full Data (Class Weighted / Algorithm Balanced) 1400 9693 344  68        0.9792        0.8717    0.9255             0.9597    0.9642
+           XGBoost   Data Balanced (Random Undersampling Majority) 1413 9575 462  55        0.9737        0.8453    0.9095             0.9583    0.9551

@@ -393,7 +393,7 @@ print(format_metrics_table(compute_metrics(_t, _p)).to_string(index=False))
 
 # In[6]:
 # =============================================================
-# CELL 6 — Dataset Saving & Imbalance Checks (No Sampling)
+# CELL 6 — Dataset Saving & Imbalance Checks
 # =============================================================
 
 def check_imbalance_ratio(y, split_name="") -> dict:
@@ -410,6 +410,22 @@ print("Original class distribution:")
 cnt_orig = check_imbalance_ratio(y_train, "TRAIN")
 check_imbalance_ratio(y_test,  "TEST")
 
+def method1_random_undersample(X, y, random_state=42):
+    """Randomly downsample majority class to match minority count.
+    Constraint: keeps ALL minority class samples; no minority samples removed.
+    """
+    rng        = np.random.RandomState(random_state)
+    idx_1      = np.where(y == 1)[0]
+    idx_0      = np.where(y == 0)[0]
+    n_min      = len(idx_1)
+    selected_0 = rng.choice(idx_0, size=n_min, replace=False)
+    combined   = rng.permutation(np.concatenate([idx_1, selected_0]))
+    return X[combined], y[combined]
+
+print("\nCreating Data-Balanced (Undersampled) Variant:")
+X_undersampled, y_undersampled = method1_random_undersample(X_train, y_train, CONFIG["RANDOM_STATE"])
+check_imbalance_ratio(y_undersampled, "Data-Balanced Train")
+
 def save_dataset_csv(X, y, path, feature_names):
     """Save feature matrix + labels to CSV."""
     df = pd.DataFrame(X, columns=feature_names)
@@ -418,8 +434,9 @@ def save_dataset_csv(X, y, path, feature_names):
     print(f"  Saved {len(df):,} rows  →  {path}")
 
 out = CONFIG["OUTPUT_DIR"]
-print("\nSaving full datasets ...")
+print("\nSaving datasets ...")
 save_dataset_csv(X_train, y_train, out / "full_training_set.csv", FEATURE_NAMES)
+save_dataset_csv(X_undersampled, y_undersampled, out / "undersampled_training_set.csv", FEATURE_NAMES)
 save_dataset_csv(X_test,  y_test,  out / "full_test_set.csv", FEATURE_NAMES)
 
 scale_pos_weight_imb = cnt_orig[0] / max(cnt_orig[1], 1)
@@ -578,17 +595,13 @@ def stratified_subsample(X, y, max_samples, random_state):
 def run_model(X_tr, y_tr, X_te, y_te, mc, dataset_mode, config) -> dict:
     """Train one classifier on one dataset variant.
 
-    dataset_mode: 'imbalanced' | 'method1' | 'method2'
-    For 'imbalanced': class_weight='balanced' (or scale_pos_weight) applied.
-    For 'method1'/'method2': data already balanced — no extra weighting needed.
-
     Training strategy:
       1. Inner 3-fold RandomizedSearch/GridSearch -> best hyperparameters
       2. Outer 5-fold StratifiedKFold -> generalisation metrics (CV)
       3. Refit best estimator on full X_tr -> evaluate on held-out test set
     """
     rs, n_jobs = config["RANDOM_STATE"], config["N_JOBS"]
-    is_imb     = True  # Always use class weights now
+    is_imb     = (dataset_mode == "class_weighted")
 
     # SVM: subsample if training set is too large
     if mc["name"] == "SVM" and len(X_tr) > SVM_MAX_SAMPLES:
@@ -642,6 +655,10 @@ def train_all_models(datasets: dict, X_te, y_te, model_configs, config) -> dict:
     datasets: {'imbalanced': (X_tr, y_tr), 'method1': ..., 'method2': ...}
     Returns nested dict: results[model_name][dataset_mode] = {best_params, ...}
     """
+    import joblib
+    models_dir = config["OUTPUT_DIR"] / "saved_models"
+    models_dir.mkdir(parents=True, exist_ok=True)
+    
     results = {}
     for mc in model_configs:
         name = mc["name"]
@@ -651,6 +668,11 @@ def train_all_models(datasets: dict, X_te, y_te, model_configs, config) -> dict:
             res = run_model(X_tr, y_tr, X_te, y_te, mc, dmode, config)
             results[name][dmode] = res
             m = res["test_metrics"]
+            
+            # --- Save the best estimator ---
+            model_path = models_dir / f"{name}_{dmode}.pkl"
+            joblib.dump(res["best_estimator"], model_path)
+            
             print(f"done | bal_acc={m['balanced_accuracy']:.4f}  "
                   f"F1_macro={m['f1_macro']:.4f}  "
                   f"TP={m['TP']}  FN={m['FN']}")
@@ -658,10 +680,12 @@ def train_all_models(datasets: dict, X_te, y_te, model_configs, config) -> dict:
 
 
 datasets = {
-    "full_weighted": (X_train, y_train)
+    "imbalanced_baseline": (X_train, y_train),
+    "class_weighted": (X_train, y_train),
+    "data_balanced": (X_undersampled, y_undersampled)
 }
 
-print("Training all models on full class-weighted dataset ...\n")
+print("Training all models on explicit dataset variants ...\n")
 all_results = train_all_models(datasets, X_test, y_test, model_configs, CONFIG)
 print("\nAll models trained.")
 
@@ -671,7 +695,9 @@ print("\nAll models trained.")
 # =============================================================
 
 DATASET_LABELS = {
-    "full_weighted": "Full Data (Class Weighted)"
+    "imbalanced_baseline": "Pure Imbalanced Baseline (No Weights)",
+    "class_weighted": "Full Data (Class Weighted / Algorithm Balanced)",
+    "data_balanced": "Data Balanced (Random Undersampling Majority)"
 }
 
 
@@ -758,8 +784,7 @@ def plot_all_confusion_matrices(all_results: dict) -> None:
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 4 * n_rows))
     for r, mname in enumerate(model_names):
         for c, dmode in enumerate(dmodes):
-            # Since n_cols=1, axes is a 1D array of size n_rows (4)
-            ax = axes[r] if n_rows > 1 else axes
+            ax = np.atleast_2d(axes)[r, c]
             cm_d = all_results[mname][dmode]["test_metrics"]
             plot_confusion_heatmap(cm_d, f"{mname}\n{DATASET_LABELS[dmode]}", ax)
     fig.suptitle("Confusion Matrices — Test Set", fontsize=14, fontweight="bold", y=1.01)
@@ -965,6 +990,10 @@ else:
             class_weight=cw,
             verbose=1,
         )
+        
+        models_dir = CONFIG["OUTPUT_DIR"] / "saved_models"
+        models_dir.mkdir(parents=True, exist_ok=True)
+        model.save(models_dir / "LSTM_Keras_class_weighted.keras")
 
         y_prob = model.predict(W_te, verbose=0).ravel()
         y_pred = (y_prob >= 0.5).astype(int)

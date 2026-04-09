@@ -200,20 +200,35 @@ def main():
     print_separator("-")
     print("                           [ FINAL GRADING REPORT ]")
     print_separator("-")
-    
-    for mf in model_files:
+
+    def print_metrics(model_name: str, metrics: dict):
+        """Pretty-print all evaluation metrics for one model."""
+        print(f"\n{'─'*60}")
+        print(f"  Model : {model_name.upper()}")
+        print(f"{'─'*60}")
+        print(f"  {'Confusion Matrix':<28} TP={metrics['TP']:>5}  FN={metrics['FN']:>5}")
+        print(f"  {'':28} FP={metrics['FP']:>5}  TN={metrics['TN']:>5}")
+        print(f"  {'─'*56}")
+        print(f"  {'Balanced Accuracy':<28} {metrics['balanced_accuracy']:.4f}")
+        print(f"  {'─'*56}")
+        print(f"  {'[ Fall Class — Class 1 ]':}")
+        print(f"    {'Precision (PPV)':<26} {metrics['precision_1']:.4f}")
+        print(f"    {'Recall (Sensitivity/TPR)':<26} {metrics['recall_1']:.4f}")
+        print(f"    {'F1 Score':<26} {metrics['f1_class_1']:.4f}")
+        print(f"  {'[ No-Fall Class — Class 0 ]':}")
+        print(f"    {'Precision':<26} {metrics['precision_0']:.4f}")
+        print(f"    {'Specificity (TNR)':<26} {metrics['recall_0']:.4f}")
+        print(f"    {'F1 Score':<26} {metrics['f1_class_0']:.4f}")
+        print(f"  {'─'*56}")
+        print(f"  {'F1 Macro':<28} {metrics['f1_macro']:.4f}")
+
+    for mf in sorted(model_files):
         model_name = mf.stem
         try:
             model = joblib.load(mf)
             y_pred = model.predict(X_test_extracted)
             metrics = compute_metrics(y_true, y_pred)
-            
-            print(f"\nEvaluating Model: {model_name.upper()}")
-            print(f"  Balanced Accuracy : {metrics['balanced_accuracy']:.4f}")
-            print(f"  F1 Macro Score    : {metrics['f1_macro']:.4f}")
-            print(f"  F1 (Class 1)      : {metrics['f1_class_1']:.4f}")
-            print(f"  Overall Accuracy  : {metrics['accuracy']:.4f}")
-            print(f"  Confusion Matrix  : TP={metrics['TP']} | TN={metrics['TN']} | FP={metrics['FP']} | FN={metrics['FN']}")
+            print_metrics(model_name, metrics)
         except Exception as e:
             print(f"  [Error loading or predicting with {model_name}]: {e}")
             
@@ -227,12 +242,7 @@ def main():
              y_pred = (y_prob >= 0.5).astype(int)
              metrics = compute_metrics(y_true, y_pred)
              
-             print(f"\nEvaluating Model: {pf.stem.upper()}")
-             print(f"  Balanced Accuracy : {metrics['balanced_accuracy']:.4f}")
-             print(f"  F1 Macro Score    : {metrics['f1_macro']:.4f}")
-             print(f"  F1 (Class 1)      : {metrics['f1_class_1']:.4f}")
-             print(f"  Overall Accuracy  : {metrics['accuracy']:.4f}")
-             print(f"  Confusion Matrix  : TP={metrics['TP']} | TN={metrics['TN']} | FP={metrics['FP']} | FN={metrics['FN']}")
+             print_metrics(pf.stem, metrics)
     except Exception:
         pass # Ignore Keras logic if TF missing on Professor's machine
 

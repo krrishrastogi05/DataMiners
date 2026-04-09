@@ -1,0 +1,44 @@
+# ── Python cache ─────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# ── Virtual environments ──────────────────────────────────────
+.env
+.venv
+env/
+venv/
+ENV/
+
+# ── Run logs (generated on each execution) ───────────────────
+run_output_*.txt
+
+# ── Generated model artifacts & large CSVs ───────────────────
+data/Balanced/saved_models/
+data/Balanced/*.csv
+
+# ── Generated plot images ─────────────────────────────────────
+confusion_matrices.png
+confusion_matrices_lstm.png
+feat_importance_*.png
+metric_comparison.png
+
+# ── IDE / editor folders ──────────────────────────────────────
+.claude/
+.vscode/
+.idea/
+*.code-workspace
+
+# ── OS artefacts ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Jupyter checkpoints ───────────────────────────────────────
+.ipynb_checkpoints/
+notebooks/projNbs/
+
+# ── Misc ──────────────────────────────────────────────────────
+*.log
+*.tmp
